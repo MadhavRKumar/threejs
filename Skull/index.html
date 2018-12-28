@@ -4,6 +4,7 @@
 <head>
     <title>Skelly</title>
     <meta charset="utf-8">
+    
 </head>
 
 <body>
@@ -44,7 +45,8 @@
   // Put the Fragment Shader code here
     varying vec2 vUv;
     varying vec3 norm;
-    uniform vec3 ambient;
+    uniform vec3 ambientColor;
+    uniform float ambientStrength;
     uniform vec3 lightDir;
 
     float random( vec3 scale, float seed ){
@@ -55,7 +57,8 @@
         float ndotl = dot(norm, lightDir);
         //ndotl = 1. + clamp(floor(ndotl), -1., 0.);
         ndotl = smoothstep(0., 0.025, ndotl);
-        gl_FragColor = vec4((ndotl*ambient), 1.);
+        vec3 result = (ndotl*ambientColor) + ambientStrength;
+        gl_FragColor = vec4( result, 1.);
     }
   </script>
 
@@ -124,6 +127,7 @@
 
         // create a scene
         scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
 
 
         // create a camera the size of the browser window
@@ -141,11 +145,12 @@
         camera.position.z = 100;
         controls.update();
 
-        // create a wireframe material
+        // create a pink toon material
         material = new THREE.ShaderMaterial({
             uniforms: {
-                ambient: { value: new THREE.Vector3(1, 0.7, 0.75)},
-                lightDir: { value: new THREE.Vector3(1, 0.5, 0.25) }
+                ambientColor: { value: new THREE.Vector3(1, 0.7, 0.75)},
+                ambientStrength: { value: 0.12 },
+                lightDir: { value: new THREE.Vector3(1, 0.0, 0.5) }
             },
             vertexShader: document.getElementById('vertexShader').textContent,
             fragmentShader: document.getElementById('fragmentShader').textContent
@@ -167,15 +172,31 @@
                 }
                 );
 
+                var scl = 0.01;
+
                 scene.add(object);
-                object.scale.set(0.01, 0.01, 0.01);
-                object.position.set(0, -10, 0);
+                object.scale.set(scl, scl, scl);
+
+                object.children[0].geometry.computeBoundingSphere();
+                var boundingSphere = object.children[0].geometry.boundingSphere;
+                var radius = boundingSphere.radius * scl;
+                var geometry = new THREE.SphereGeometry(radius, 8, 8);
+                var mat = new THREE.MeshBasicMaterial({color: 0x777777, wireframe: true});
+        
+                console.log( object.children[0].geometry.boundingSphere);
+                var sphere = new THREE.Mesh(geometry, mat);
+                console.log(sphere.position);
+                
+                scene.add(sphere);
+
+                object.position.y = -radius;
+            },
+
+            // callback function when loading is in progress
+            function (xhr) {
+                
             }
         );
-
-        // create light
-        dirLight = new THREE.DirectionalLight(0xF0F0F0, 0.75);
-        scene.add(dirLight);
 
         // create the renderer and attach it to the DOM
         renderer = new THREE.WebGLRenderer();
@@ -184,8 +205,6 @@
 
         container.appendChild(renderer.domElement);
 
-        // store texture
-
 
         render();
 
@@ -193,7 +212,8 @@
 
     function render() {
         controls.update();
-        // let there be light
+        var time = (Date.now() - start) * 0.0005;
+        material.uniforms['lightDir'].value = new THREE.Vector3(Math.sin(time), 0.25, Math.cos(time))
         renderer.render(scene, camera);
 
 
