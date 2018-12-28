@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Skelly</title>
+    <meta charset="utf-8">
+</head>
+
+<body>
+    <div id="container"></div>
+</body>
+
+<script src="../three/three.min.js"></script>
+<script src="../three/OrbitControls.js"></script>
+<script src="../three/OBJLoader.js"></script>
+
+<script type="x-shader/x-vertex" id="standardVert">
+    varying vec2 vUv;
+
+    void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+</script>
+
+<script type="x-shader/x-vertex" id="vertexShader">
+  // Put the Vertex Shader code here
+  varying vec2 vUv;
+  varying vec3 norm;
+  varying float noise;
+  uniform float time;
+
+
+  void main() {
+      vUv = uv;
+
+      norm = normal;
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+  </script>
+
+<script type="x-shader/x-vertex" id="fragmentShader">
+  // Put the Fragment Shader code here
+    varying vec2 vUv;
+    varying vec3 norm;
+    uniform vec3 ambient;
+    uniform vec3 lightDir;
+
+    float random( vec3 scale, float seed ){
+        return fract( sin( dot( gl_FragCoord.xyz + seed, scale ) ) * 43758.5453 + seed ) ;
+      }
+
+    void main() {
+        float ndotl = dot(norm, lightDir);
+        //ndotl = 1. + clamp(floor(ndotl), -1., 0.);
+        ndotl = smoothstep(0., 0.025, ndotl);
+        gl_FragColor = vec4((ndotl*ambient), 1.);
+    }
+  </script>
+
+<script type="x-shader/x-vertex" id="blurShader">
+    uniform sampler2D bufferTexture;
+    uniform vec2 resolution;
+    uniform float strength;
+
+    varying vec2 vUv; 
+
+    float random( vec3 scale, float seed ){
+        return fract( sin( dot( gl_FragCoord.xyz + seed, scale ) ) * 43758.5453 + seed ) ;
+      }
+
+    void main() {
+        vec2 center = 0.5 * resolution;
+        vec2 toCenter = center - vUv * resolution;
+        vec4 col = vec4(0.0);
+
+        float total = 0.0;
+        const float samples = 50.0;
+        float offset=random(vec3(12.9898,78.233,151.7182),0.0);
+        for(float t=0.0; t<= samples; t++) {
+            float percent = (t+offset)/samples;
+            float weight = 4.0*(percent - percent*percent);
+            vec4 sample = texture2D(bufferTexture, vUv+toCenter*percent*strength/resolution);
+            sample.rgb *= sample.a;
+            col += sample*weight;
+
+            total += weight;
+        }
+
+        gl_FragColor = col/total;
+        gl_FragColor.rgb /= gl_FragColor.a + 0.0001;
+    }
+</script>
+
+<script type="x-shader/x-vertex" id="compositeShader">
+    uniform sampler2D glowTexture;
+    uniform sampler2D baseTexture;
+    varying vec2 vUv;
+
+    void main() {
+        vec4 gCol = texture2D(glowTexture, vUv);
+        vec4 bCol = texture2D(baseTexture, vUv);
+        
+        vec4 col = 1.0 - (1.0 - gCol)*(1.0-bCol);
+        gl_FragColor = vec4(col.rgb, 1.0);
+    }
+</script>
+
+<script type="text/javascript" id="mainCode">
+    var container,
+        renderer,
+        scene,
+        camera,
+        start = Date.now(),
+        fov = 30,
+        dirLight,
+        controls;
+
+    window.addEventListener('load', function () {
+
+        // grab the container from the DOM
+        container = document.getElementById("container");
+
+        // create a scene
+        scene = new THREE.Scene();
+
+
+        // create a camera the size of the browser window
+        // and place it 100 units away, looking towards the center of the scene
+        camera = new THREE.PerspectiveCamera(
+            fov,
+            window.innerWidth / window.innerHeight,
+            1,
+            10000
+        );
+
+        controls = new THREE.OrbitControls(camera);
+
+        //controls.update() must be called after any manual changes to the camera's transform
+        camera.position.z = 100;
+        controls.update();
+
+        // create a wireframe material
+        material = new THREE.ShaderMaterial({
+            uniforms: {
+                ambient: { value: new THREE.Vector3(1, 0.7, 0.75)},
+                lightDir: { value: new THREE.Vector3(1, 0.5, 0.25) }
+            },
+            vertexShader: document.getElementById('vertexShader').textContent,
+            fragmentShader: document.getElementById('fragmentShader').textContent
+        });
+
+        // instantiate loader
+        var loader = new THREE.OBJLoader();
+
+
+        // load resource
+        loader.load(
+            // resource URL
+            'assets/skelly.obj',
+
+            // callback function when resource is loaded
+            function (object) {
+                object.traverse(function (node) {
+                    if (node.isMesh) node.material = material;
+                }
+                );
+
+                scene.add(object);
+                object.scale.set(0.01, 0.01, 0.01);
+                object.position.set(0, -10, 0);
+            }
+        );
+
+        // create light
+        dirLight = new THREE.DirectionalLight(0xF0F0F0, 0.75);
+        scene.add(dirLight);
+
+        // create the renderer and attach it to the DOM
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        container.appendChild(renderer.domElement);
+
+        // store texture
+
+
+        render();
+
+    });
+
+    function render() {
+        controls.update();
+        // let there be light
+        renderer.render(scene, camera);
+
+
+
+        requestAnimationFrame(render);
+
+    }
+</script>
+
+</html>
