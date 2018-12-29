@@ -7,11 +7,8 @@
         fov = 30,
         controls,
         material,
-        heartObj,
-        heart,
-        heartList,
-        heartMaterial,
-        radius;
+        heartList = [],
+        heartMaterial;
 
     window.addEventListener('load', function () {
 
@@ -84,33 +81,22 @@
 
                 object.children[0].geometry.computeBoundingSphere();
                 let boundingSphere = object.children[0].geometry.boundingSphere;
-                radius = boundingSphere.radius * scl;
+                let radius = boundingSphere.radius * scl;
+                object.position.y = -radius;
+
+                let count = Math.floor(getRandom(2, 5));
+                heartList = new Array(count).fill().map(u => 
+                    {
+                        let heart = createHeart(radius);
+                        scene.add(heart.heart);
+                        return heart;
+                    });
+                
+
                 // let geometry = new THREE.SphereGeometry(radius, 8, 8);
                 // let mat = new THREE.MeshBasicMaterial({ color: 0x777777, wireframe: true });
-
                 // let sphere = new THREE.Mesh(geometry, mat);
-
                 // scene.add(sphere);
-
-                object.position.y = -radius;
-                let heartSize = getRandom(1, 2);
-                radius += heartSize*1.1;
-                heartMaterial.uniforms['radius'] = radius;
-                let heartGeometry = new THREE.SphereGeometry(heartSize, 8, 8);
-                heart = new THREE.Mesh(heartGeometry, heartMaterial);
-
-                scene.add(heart);
-
-
-
-                // destructuring is very cool
-                let { x, y, z, theta, pi } = getPointOnSphere(radius);
-
-                heartObj = { heart, theta, pi };
-
-                heart.translateX(x);
-                heart.translateY(y);
-                heart.translateZ(z);
             },
 
             // callback function when loading is in progress
@@ -118,10 +104,6 @@
 
             }
         );
-
-
-
-
 
         // create the renderer and attach it to the DOM
         renderer = new THREE.WebGLRenderer();
@@ -133,8 +115,28 @@
 
         render();
 
+        function render() {
+            controls.update();
+            var time = (Date.now() - start) * 0.0005;
+            material.uniforms['lightDir'].value = new THREE.Vector3(Math.sin(time), -0.25, Math.cos(time));
+            heartMaterial.uniforms['lightDir'].value = new THREE.Vector3(Math.cos(time / 0.4) * Math.sin(-time), Math.cos(time / 0.4), Math.sin(time / 10.0));
 
+            for(let i = 0; i < heartList.length; i++) {
 
+                let {heart, theta, pi, radius} = heartList[i]; 
+
+                let { x, y, z } = getPointOnSphere(radius, (theta + (time * 0.1)) % 2 * Math.PI + 0.01, pi + time % 2 * Math.PI + 0.01);
+             
+                heart.position.set(x, y, z);
+            
+            }
+            renderer.render(scene, camera);
+
+            requestAnimationFrame(render);
+
+        }
+
+        
         function getRandom(min, max) {
             return Math.random() * (max - min) + min;
         }
@@ -150,23 +152,31 @@
             return { x, y, z, theta, pi };
         }
 
-        function render() {
-            controls.update();
-            var time = (Date.now() - start) * 0.0005;
-            material.uniforms['lightDir'].value = new THREE.Vector3(Math.sin(time), -0.25, Math.cos(time));
-            heartMaterial.uniforms['lightDir'].value = new THREE.Vector3( Math.cos(time/0.4)*Math.sin(-time),  Math.cos(time/0.4), Math.sin(time/10.0))
-            if (heartObj) {
-                let { x, y, z} = getPointOnSphere(radius, (heartObj.theta+(time*0.1)) % 2 * Math.PI + 0.01, heartObj.pi+time % 2 * Math.PI + 0.01);
+        function createHeart(r) {
 
-                heart.position.set(x,y,z);
-            }
-            renderer.render(scene, camera);
+            // let geometry = new THREE.SphereGeometry(radius, 8, 8);
+            // let mat = new THREE.MeshBasicMaterial({ color: 0x777777, wireframe: true });
+            // let sphere = new THREE.Mesh(geometry, mat);
+            // scene.add(sphere);
+    
+            let heartSize = getRandom(1, 2);
 
-
-
-
-            requestAnimationFrame(render);
-
+            let heartGeometry = new THREE.SphereGeometry(heartSize, 8, 8);
+            let heart = new THREE.Mesh(heartGeometry, heartMaterial);
+            scene.add(heart);
+            let radius = r + heartSize/2.0;
+            // destructuring is very cool
+            let { x, y, z, theta, pi } = getPointOnSphere(radius);
+            let ho = { heart, theta, pi, radius };
+            heart.translateX(x);
+            heart.translateY(y);
+            heart.translateZ(z);
+            return ho;
         }
     });
+
+
+
 }
+
+
