@@ -140,9 +140,13 @@
 
             for(let i = 0; i < heartList.length; i++) {
 
-                let {heart, theta, pi, radius} = heartList[i]; 
+                // each heartobj is {heart, thetafunc, pifunc, radius} 
+                // where heart is the mesh
+                // thetafunc is function that updates theta on time
+                // pi funci update pi based on time
+                let {heart, thetafunc, pifunc, radius} = heartList[i]; 
 
-                let { x, y, z } = getPointOnSphere(radius, (theta + (time * 0.1)) % 2 * Math.PI + 0.01, pi + time % 2 * Math.PI + 0.01);
+                let { x, y, z } = getPointOnSphere(radius, thetafunc(time), pifunc(time));
              
                 heart.position.set(x, y, z);
             
@@ -175,19 +179,29 @@
             // let mat = new THREE.MeshBasicMaterial({ color: 0x777777, wireframe: true });
             // let sphere = new THREE.Mesh(geometry, mat);
             // scene.add(sphere);
+
+            function angleFunction(scl, ang) {
+                return (t) => {
+                    return (ang + t * scl) % 2 * Math.PI + 0.01;
+                }
+            }
     
-            let heartSize = getRandom(1, 2);
+            let heartSize = getRandom(0.5, 2);
 
             let heartGeometry = new THREE.SphereGeometry(heartSize, 8, 8);
             let heart = new THREE.Mesh(heartGeometry, heartMaterial);
             scene.add(heart);
             let radius = r + heartSize/2.0;
+
             // destructuring is very cool
             let { x, y, z, theta, pi } = getPointOnSphere(radius);
-            let ho = { heart, theta, pi, radius };
-            heart.translateX(x);
-            heart.translateY(y);
-            heart.translateZ(z);
+
+            let thetafunc = angleFunction(getRandom(0.1, 2), theta);
+            let pifunc = angleFunction(getRandom(0.1, 2), pi);      
+            let ho = { heart, thetafunc, pifunc, radius };
+
+            heart.position.set(x,y,z);
+            
             return ho;
         }
     });
