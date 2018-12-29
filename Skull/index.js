@@ -1,6 +1,7 @@
 {
     let container,
         renderer,
+        canvas,
         scene,
         camera,
         start = Date.now(),
@@ -8,10 +9,22 @@
         controls,
         material,
         heartList = [],
-        heartMaterial;
+        heartMaterial,
+        capturer = new CCapture({format: 'gif', workersPath:"../three/"});
+
+    window.addEventListener('keypress', function (event) {
+        let keyCode = event.which;
+
+        // Check for Enter
+        if(keyCode === 13) {
+            capturer.stop();
+
+            capturer.save();
+        }
+    })
 
     window.addEventListener('load', function () {
-
+        
         // grab the container from the DOM
         container = document.getElementById("container");
 
@@ -77,6 +90,7 @@
                 let scl = 0.01;
 
                 scene.add(object);
+                camera.lookAt(object);
                 object.scale.set(scl, scl, scl);
 
                 object.children[0].geometry.computeBoundingSphere();
@@ -110,12 +124,15 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
 
-        container.appendChild(renderer.domElement);
-
+        container.appendChild(canvas=renderer.domElement);
+        
+        capturer.start();
 
         render();
 
         function render() {
+            requestAnimationFrame(render);
+
             controls.update();
             var time = (Date.now() - start) * 0.0005;
             material.uniforms['lightDir'].value = new THREE.Vector3(Math.sin(time), -0.25, Math.cos(time));
@@ -132,7 +149,7 @@
             }
             renderer.render(scene, camera);
 
-            requestAnimationFrame(render);
+            capturer.capture(canvas);
 
         }
 
