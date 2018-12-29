@@ -142,8 +142,7 @@
 
                 // each heartobj is {heart, thetafunc, pifunc, radius} 
                 // where heart is the mesh
-                // thetafunc is function that updates theta on time
-                // pi funci update pi based on time
+                // theta/pi func is function that updates theta/pi on time
                 let {heart, thetafunc, pifunc, radius} = heartList[i]; 
 
                 let { x, y, z } = getPointOnSphere(radius, thetafunc(time), pifunc(time));
@@ -165,8 +164,8 @@
         // return x,y,z coordinates as well as theta and pi
         // if theta and pi are not given, then generate randomly
         function getPointOnSphere(r, t, p) {
-            let theta = t || getRandom(0, 2 * Math.PI);
-            let pi = p || getRandom(0, Math.PI);
+            let theta = t || ((t==0) ? 0 : getRandom(0, 2 * Math.PI));
+            let pi = p || ((p==0) ? 0 : getRandom(0, Math.PI));
             let x = r * Math.cos(theta) * Math.sin(pi);
             let y = r * Math.sin(theta) * Math.sin(pi);
             let z = r * Math.cos(pi);
@@ -182,14 +181,15 @@
 
             function angleFunction(scl, ang) {
                 return (t) => {
-                    return (ang + t * scl) % 2 * Math.PI + 0.01;
+                    return (ang + t * scl) % 2 * Math.PI;
                 }
             }
     
             let heartSize = getRandom(0.5, 2);
 
+            let mat = heartMaterial.clone();
             let heartGeometry = new THREE.SphereGeometry(heartSize, 8, 8);
-            let heart = new THREE.Mesh(heartGeometry, heartMaterial);
+            let heart = new THREE.Mesh(heartGeometry, mat);
             scene.add(heart);
             let radius = r + heartSize/2.0;
 
