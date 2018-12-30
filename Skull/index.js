@@ -12,6 +12,8 @@
         heartMaterial,
         capturer = new CCapture({format: 'gif', workersPath:"../three/"});
 
+
+
     window.addEventListener('keypress', function (event) {
         let keyCode = event.which;
 
@@ -24,6 +26,9 @@
     })
 
     window.addEventListener('load', function () {
+        let skullLightX = lightFunction(),
+        skullLightY = lightFunction(),
+        skullLightZ = lightFunction();
         
         // grab the container from the DOM
         container = document.getElementById("container");
@@ -126,7 +131,7 @@
 
         container.appendChild(canvas=renderer.domElement);
         
-        capturer.start();
+        //capturer.start();
 
         render();
 
@@ -135,15 +140,15 @@
 
             controls.update();
             var time = (Date.now() - start) * 0.0005;
-            material.uniforms['lightDir'].value = new THREE.Vector3(Math.sin(time), -0.25, Math.cos(time));
-            heartMaterial.uniforms['lightDir'].value = new THREE.Vector3(Math.cos(time / 0.4) * Math.sin(-time), Math.cos(time / 0.4), Math.sin(time / 10.0));
+            material.uniforms['lightDir'].value = new THREE.Vector3(skullLightX(time), skullLightY(time), skullLightZ(time));
 
             for(let i = 0; i < heartList.length; i++) {
 
                 // each heartobj is {heart, thetafunc, pifunc, radius} 
                 // where heart is the mesh
                 // theta/pi func is function that updates theta/pi on time
-                let {heart, thetafunc, pifunc, radius} = heartList[i]; 
+                let {heart, thetafunc, pifunc, radius, light} = heartList[i]; 
+                heart.material.uniforms['lightDir'].value = new THREE.Vector3(light.xfunc(time), light.yfunc(time), light.zfunc(time));
 
                 let { x, y, z } = getPointOnSphere(radius, thetafunc(time), pifunc(time));
              
@@ -152,7 +157,7 @@
             }
             renderer.render(scene, camera);
 
-            capturer.capture(canvas);
+            //capturer.capture(canvas);
 
         }
 
@@ -184,6 +189,8 @@
                     return (ang + t * scl) % 2 * Math.PI;
                 }
             }
+
+
     
             let heartSize = getRandom(0.5, 2);
 
@@ -196,13 +203,38 @@
             // destructuring is very cool
             let { x, y, z, theta, pi } = getPointOnSphere(radius);
 
-            let thetafunc = angleFunction(getRandom(0.1, 2), theta);
-            let pifunc = angleFunction(getRandom(0.1, 2), pi);      
-            let ho = { heart, thetafunc, pifunc, radius };
+            let thetafunc = angleFunction(getRandom(0.05, 1.5), theta);
+            let pifunc = angleFunction(getRandom(0.05, 1.5), pi);
+            let xfunc = lightFunction();
+            let yfunc = lightFunction();
+            let zfunc = lightFunction();
+            let light = {xfunc, yfunc, zfunc};     
+            let ho = { heart, thetafunc, pifunc, radius, light };
 
             heart.position.set(x,y,z);
             
             return ho;
+        }
+
+        function lightFunction() {
+            let scl = getRandom(.5, 10);
+            let scl2 = getRandom(.5, 10);
+            let chance = Math.random();
+            if(chance < 0.33) {
+                return (t) => {
+                    return (Math.cos(t*scl));
+                }
+            }
+            else if(chance < 0.66){
+                return (t) => {
+                    return (Math.sin(t*scl));
+                }
+            }
+            else {
+                return (t) => {
+                    return (Math.sin(t*scl)*Math.cos(t*scl2));
+                }
+            }
         }
     });
 
