@@ -10,7 +10,7 @@
         material,
         heartList = [],
         heartMaterial,
-        capturer = new CCapture({format: 'gif', workersPath:"../three/"});
+        capturer = new CCapture({ format: 'gif', workersPath: "../three/" });
 
 
 
@@ -18,7 +18,7 @@
         let keyCode = event.which;
 
         // Check for Enter
-        if(keyCode === 13) {
+        if (keyCode === 13) {
             capturer.stop();
 
             capturer.save();
@@ -27,9 +27,9 @@
 
     window.addEventListener('load', function () {
         let skullLightX = lightFunction(),
-        skullLightY = lightFunction(),
-        skullLightZ = lightFunction();
-        
+            skullLightY = lightFunction(),
+            skullLightZ = lightFunction();
+
         // grab the container from the DOM
         container = document.getElementById("container");
 
@@ -103,14 +103,25 @@
                 let radius = boundingSphere.radius * scl;
                 object.position.y = -radius;
 
-                let count = Math.floor(getRandom(2, 5));
-                heartList = new Array(count).fill().map(u => 
-                    {
-                        let heart = createHeart(radius);
-                        scene.add(heart.heart);
-                        return heart;
-                    });
-                
+                loader.load(
+                    // resource URL
+                    'assets/heart.obj',
+
+                    // callback function when resource is loaded
+                    function (h) {
+                        let count = Math.floor(getRandom(2, 5));
+                        let heartScl = getRandom(0.01, 0.03);
+                        heartList = new Array(count).fill().map(u => {
+                            let heart = createHeart(h, radius);
+                            heart.heart.scale.set(heartScl, heartScl, heartScl);
+                            scene.add(heart.heart);
+                            heart.heart.children[0].material = heartMaterial.clone();
+                            return heart;
+                        });
+                    }
+                )
+
+
 
                 // let geometry = new THREE.SphereGeometry(radius, 8, 8);
                 // let mat = new THREE.MeshBasicMaterial({ color: 0x777777, wireframe: true });
@@ -129,8 +140,8 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
 
-        container.appendChild(canvas=renderer.domElement);
-        
+        container.appendChild(canvas = renderer.domElement);
+
         //capturer.start();
 
         render();
@@ -142,18 +153,18 @@
             var time = (Date.now() - start) * 0.0005;
             material.uniforms['lightDir'].value = new THREE.Vector3(skullLightX(time), skullLightY(time), skullLightZ(time));
 
-            for(let i = 0; i < heartList.length; i++) {
+            for (let i = 0; i < heartList.length; i++) {
 
                 // each heartobj is {heart, thetafunc, pifunc, radius} 
                 // where heart is the mesh
                 // theta/pi func is function that updates theta/pi on time
-                let {heart, thetafunc, pifunc, radius, light} = heartList[i]; 
-                heart.material.uniforms['lightDir'].value = new THREE.Vector3(light.xfunc(time), light.yfunc(time), light.zfunc(time));
+                let { heart, thetafunc, pifunc, radius, light } = heartList[i];
+                heart.children[0].material.uniforms['lightDir'].value = new THREE.Vector3(light.xfunc(time), light.yfunc(time), light.zfunc(time));
 
                 let { x, y, z } = getPointOnSphere(radius, thetafunc(time), pifunc(time));
-             
+
                 heart.position.set(x, y, z);
-            
+
             }
             renderer.render(scene, camera);
 
@@ -161,7 +172,7 @@
 
         }
 
-        
+
         function getRandom(min, max) {
             return Math.random() * (max - min) + min;
         }
@@ -169,20 +180,16 @@
         // return x,y,z coordinates as well as theta and pi
         // if theta and pi are not given, then generate randomly
         function getPointOnSphere(r, t, p) {
-            let theta = t || ((t==0) ? 0 : getRandom(0, 2 * Math.PI));
-            let pi = p || ((p==0) ? 0 : getRandom(0, Math.PI));
+            let theta = t || ((t == 0) ? 0 : getRandom(0, 2 * Math.PI));
+            let pi = p || ((p == 0) ? 0 : getRandom(0, Math.PI));
             let x = r * Math.cos(theta) * Math.sin(pi);
             let y = r * Math.sin(theta) * Math.sin(pi);
             let z = r * Math.cos(pi);
             return { x, y, z, theta, pi };
         }
 
-        function createHeart(r) {
+        function createHeart(h, r) {
 
-            // let geometry = new THREE.SphereGeometry(radius, 8, 8);
-            // let mat = new THREE.MeshBasicMaterial({ color: 0x777777, wireframe: true });
-            // let sphere = new THREE.Mesh(geometry, mat);
-            // scene.add(sphere);
 
             function angleFunction(scl, ang) {
                 return (t) => {
@@ -190,15 +197,9 @@
                 }
             }
 
-
-    
-            let heartSize = getRandom(0.5, 2);
-
-            let mat = heartMaterial.clone();
-            let heartGeometry = new THREE.SphereGeometry(heartSize, 8, 8);
-            let heart = new THREE.Mesh(heartGeometry, mat);
+            let heart = h.clone();
             scene.add(heart);
-            let radius = r + heartSize/2.0;
+            let radius = r + heartSize / 2.0;
 
             // destructuring is very cool
             let { x, y, z, theta, pi } = getPointOnSphere(radius);
@@ -208,31 +209,31 @@
             let xfunc = lightFunction();
             let yfunc = lightFunction();
             let zfunc = lightFunction();
-            let light = {xfunc, yfunc, zfunc};     
+            let light = { xfunc, yfunc, zfunc };
             let ho = { heart, thetafunc, pifunc, radius, light };
 
-            heart.position.set(x,y,z);
-            
+            heart.position.set(x, y, z);
+
             return ho;
         }
 
         function lightFunction() {
-            let scl = getRandom(.5, 10);
-            let scl2 = getRandom(.5, 10);
+            let scl = getRandom(.5, 5);
+            let scl2 = getRandom(.5, 5);
             let chance = Math.random();
-            if(chance < 0.33) {
+            if (chance < 0.33) {
                 return (t) => {
-                    return (Math.cos(t*scl));
+                    return (Math.cos(t * scl));
                 }
             }
-            else if(chance < 0.66){
+            else if (chance < 0.66) {
                 return (t) => {
-                    return (Math.sin(t*scl));
+                    return (Math.sin(t * scl));
                 }
             }
             else {
                 return (t) => {
-                    return (Math.sin(t*scl)*Math.cos(t*scl2));
+                    return (Math.sin(t * scl) * Math.cos(t * scl2));
                 }
             }
         }
