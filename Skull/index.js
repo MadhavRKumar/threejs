@@ -16,9 +16,9 @@
         heartList = [],
         heartMaterial,
         capturer = new CCapture({ format: 'gif', workersPath: "../three/" }),
-        pink = new THREE.Color(0xFFB6C1),
-        darkGrey = new THREE.Color(0x111111),
-        palette = [darkGrey, pink];
+        pink = new THREE.Color(0xffe2e7),
+        darkGrey = new THREE.Color(0x010101),
+        palette = [darkGrey,  pink];
 
 
 
@@ -51,7 +51,7 @@
 
         // create a scene for 3D objects
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xffffff);
+        scene.background = new THREE.Color(0x111111);
 
         // create scene for post-processing
         quadScene = new THREE.Scene();
@@ -215,7 +215,7 @@
 
             requestAnimationFrame(render);
 
-            //capturer.capture(canvas);
+            // capturer.capture(canvas);
 
         }
 
