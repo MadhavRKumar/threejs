@@ -33,7 +33,7 @@
         }
     })
 
-    window.addEventListener('load', function () {
+function init () {
         let skullLightX = lightFunction(),
             skullLightY = lightFunction(),
             skullLightZ = lightFunction();
@@ -123,7 +123,7 @@
 
 
         // instantiate loader
-        var loader = new THREE.OBJLoader();
+        let loader = new THREE.OBJLoader2();
 
         // load resource
         loader.load(
@@ -131,7 +131,9 @@
             'assets/skelly.obj',
 
             // callback function when resource is loaded
-            function (object) {
+            function (loadObj) {
+                let object = loadObj.detail.loaderRootNode;
+                console.log(loadObj);
                 object.traverse(function (node) {
                     if (node.isMesh) node.material = material;
                 }
@@ -148,12 +150,15 @@
                 let radius = boundingSphere.radius * scl;
                 object.position.y = -radius;
 
-                loader.load(
+                let heartLoader = new THREE.OBJLoader2();
+                heartLoader.load(
                     // resource URL
                     'assets/heart.obj',
 
                     // callback function when resource is loaded
-                    function (h) {
+                    function (loadHeart) {
+                        let h = loadHeart.detail.loaderRootNode;
+                        console.log(loadHeart);
                         let count = Math.floor(getRandom(4, 8));
                         let heartScl = getRandom(0.01, 0.03);
                         heartList = new Array(count).fill().map(u => {
@@ -163,7 +168,11 @@
                             heart.heart.children[0].material = heartMaterial.clone();
                             return heart;
                         });
-                    }
+                    },
+                    null,
+                    null,
+                    null,
+                    true
                 )
 
 
@@ -177,7 +186,10 @@
             // callback function when loading is in progress
             function (xhr) {
 
-            }
+            },
+            null,
+            null,
+            true
         );
 
 
@@ -289,7 +301,9 @@
                 }
             }
         }
-    });
+    }
+
+    init();
 
 
 
