@@ -15,10 +15,11 @@
         material,
         heartList = [],
         heartMaterial,
-        capturer = new CCapture({ format: 'gif', workersPath: "../three/" }),
+        isRecord = window.location.href.indexOf("?record") > -1;
+        capturer = !isRecord || new CCapture({ format: 'gif', workersPath: "../three/" }),
         pink = new THREE.Color(0xffe2e7),
         darkGrey = new THREE.Color(0x010101),
-        palette = [darkGrey,  pink];
+        palette = [darkGrey, pink];
 
 
 
@@ -26,14 +27,22 @@
         let keyCode = event.which;
 
         // Check for Enter
-        if (keyCode === 13) {
+        if (keyCode === 13 && isRecord) {
             capturer.stop();
 
             capturer.save();
         }
     })
 
-function init () {
+
+    function onWindowResize() {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        
+    }
+
+    function init() {
         let skullLightX = lightFunction(),
             skullLightY = lightFunction(),
             skullLightZ = lightFunction();
@@ -66,6 +75,8 @@ function init () {
             10000
         );
 
+        window.addEventListener('resize', onWindowResize);
+
 
         // create orthographic camera for post-processing
         orthoCamera = new THREE.OrthographicCamera(1 / -2, 1 / 2, 1 / 2, 1 / -2, .00001, 1000);
@@ -95,7 +106,7 @@ function init () {
         // so that i can change it up if I wish
         heartMaterial = new THREE.ShaderMaterial({
             uniforms: {
-                ambientColor: { value: pink},
+                ambientColor: { value: pink },
                 ambientStrength: { value: 0.2 },
                 lightDir: { value: new THREE.Vector3() },
             },
@@ -106,9 +117,9 @@ function init () {
         // material to apply to quad for post-processing
         ditherMaterial = new THREE.ShaderMaterial({
             uniforms: {
-                texture: { type:'t', value: 0, texture: baseTexture },
-                palette: { value: palette},
-                paletteSize: { value: 2}
+                texture: { type: 't', value: 0, texture: baseTexture },
+                palette: { value: palette },
+                paletteSize: { value: 2 }
             },
             vertexShader: document.getElementById("vertexShader").textContent,
             fragmentShader: document.getElementById("ditheringShader").textContent,
@@ -133,8 +144,8 @@ function init () {
 
             // callback function when resource is loaded
             function (loadObj) {
+                // This is syntax required from OBJLoader2 because argument is NOT Object3D it turns out
                 let object = loadObj.detail.loaderRootNode;
-                console.log(loadObj);
                 object.traverse(function (node) {
                     if (node.isMesh) node.material = material;
                 }
@@ -160,10 +171,9 @@ function init () {
                     // callback function when resource is loaded
                     function (loadHeart) {
                         let h = loadHeart.detail.loaderRootNode;
-                        console.log(loadHeart);
                         let count = Math.floor(getRandom(4, 8));
-                        let heartScl = getRandom(0.01, 0.03);
                         heartList = new Array(count).fill().map(u => {
+                            let heartScl = getRandom(0.01, 0.03);
                             let heart = createHeart(h, radius);
                             heart.heart.scale.set(heartScl, heartScl, heartScl);
                             scene.add(heart.heart);
@@ -179,33 +189,18 @@ function init () {
                     null,
                     true
                 )
-
-
-
-                // let geometry = new THREE.SphereGeometry(radius, 8, 8);
-                // let mat = new THREE.MeshBasicMaterial({ color: 0x777777, wireframe: true });
-                // let sphere = new THREE.Mesh(geometry, mat);
-                // scene.add(sphere);
             },
-
-            // callback function when loading is in progress
-            function (xhr) {
-
-            },
+            null,
             null,
             null,
             true
         );
-
-
-        //capturer.start();
-
+        if(isRecord) {
+        capturer.start();
+        }
         render();
 
-
-
         //////////////////// RENDER FUNCTION ////////////////////
-
         function render() {
 
             controls.update();
@@ -232,8 +227,9 @@ function init () {
 
             requestAnimationFrame(render);
 
-            // capturer.capture(canvas);
-
+            if(isRecord) {
+            capturer.capture(canvas);
+            }
         }
 
 
@@ -254,6 +250,9 @@ function init () {
             return { x, y, z, theta, pi };
         }
 
+        // creates a "heart object" from heart mesh and radius
+        // each heart object contains info concering mesh rotation, "light" rotation,
+        // size, and offset
         function createHeart(h, r) {
 
             function angleFunction(scl, ang) {
@@ -262,7 +261,7 @@ function init () {
                 }
             }
 
-            let heartSize = 2;
+            let heartSize = getRandom(2,4);
 
             let heart = h.clone();
             scene.add(heart);
@@ -306,12 +305,9 @@ function init () {
                 }
             }
         }
+
     }
-
     init();
-
-
-
 }
 
 

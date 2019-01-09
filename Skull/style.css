@@ -1,5 +1,6 @@
 body {
     margin: 0;
+    overflow: hidden;
 }
 
 #container {
@@ -7,7 +8,7 @@ body {
 }
 
 #wrapper {
-    position: absolute;
+    position: fixed;
     height: 100%;
     width: 100%;
     background: white;
@@ -19,7 +20,7 @@ body {
 #loading {
     position: absolute;
     left: 50%;
-    margin: -100px 0 0 -100px; 
+    margin: -100px 0 0 -94px; 
     top: 50%;
 }
 
