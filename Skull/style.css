@@ -1,7 +1,21 @@
+body {
+    margin: 0;
+}
+
 #container {
     position: relative;
 }
 
+#wrapper {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background: white;
+    opacity: 1;
+    transition: opacity .4s ease-in-out;
+    -moz-transition: opacity .4s ease-in-out;
+    -webkit-transition: opacity .4s ease-in-out;
+}
 #loading {
     position: absolute;
     left: 50%;
@@ -9,14 +23,6 @@
     top: 50%;
 }
 
-#spiral {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    animation: load 2.5s ease-in-out alternate-reverse infinite;
-}
-
-@keyframes load {
-    to {
-        stroke-dashoffset: 0;
-    }
+.fade-out {
+    opacity: 0 !important;
 }

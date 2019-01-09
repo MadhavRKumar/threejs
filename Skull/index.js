@@ -124,6 +124,7 @@ function init () {
 
         // instantiate loader
         let loader = new THREE.OBJLoader2();
+        loader.setLogging(false);
 
         // load resource
         loader.load(
@@ -151,6 +152,7 @@ function init () {
                 object.position.y = -radius;
 
                 let heartLoader = new THREE.OBJLoader2();
+                heartLoader.setLogging(false);
                 heartLoader.load(
                     // resource URL
                     'assets/heart.obj',
@@ -168,6 +170,9 @@ function init () {
                             heart.heart.children[0].material = heartMaterial.clone();
                             return heart;
                         });
+
+                        let loader = document.getElementById("wrapper");
+                        loader.classList.add("fade-out");
                     },
                     null,
                     null,
