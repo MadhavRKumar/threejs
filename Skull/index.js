@@ -36,8 +36,10 @@
 
 
     function onWindowResize() {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.aspect = window.innerWidth / window.innerHeight;
+        let w = window.innerWidth, h = window.innerHeight;
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        baseTexture.setSize(w, h);
         camera.updateProjectionMatrix();
         
     }
@@ -140,13 +142,14 @@
         // load resource
         loader.load(
             // resource URL
-            'assets/skelly.obj',
+            'assets/skelly2.obj',
 
             // callback function when resource is loaded
             function (loadObj) {
                 // This is syntax required from OBJLoader2 because argument is NOT Object3D it turns out
                 let object = loadObj.detail.loaderRootNode;
                 object.traverse(function (node) {
+                    console.log(node);
                     if (node.isMesh) node.material = material;
                 }
                 );
