@@ -116,12 +116,24 @@
             fragmentShader: document.getElementById("fragmentShader").textContent
         });
 
-        // material to apply to quad for post-processing
+        // material to apply to quad for post-processing\
+
+        let bayerMatrix = [
+            0,  32, 8,  40, 2,  34, 10, 42,
+            48, 16, 56, 24, 50, 18, 58, 26,
+            12, 44, 4,  36, 14, 46, 6,  38,
+            60, 28, 52, 20, 62, 30, 54, 22,
+            3,  35, 11, 43, 1,  33, 9,  41,
+            51, 19, 59, 27, 49, 17, 57, 25,
+            15, 47, 7,  39, 13, 45, 5,  37,
+            63, 31, 55, 23, 61, 29, 53, 21];
+
         ditherMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 texture: { type: 't', value: 0, texture: baseTexture },
                 palette: { value: palette },
-                paletteSize: { value: 2 }
+                paletteSize: { value: 2 },
+                indexMatrix8x8: { value: bayerMatrix}
             },
             vertexShader: document.getElementById("vertexShader").textContent,
             fragmentShader: document.getElementById("ditheringShader").textContent,
@@ -149,7 +161,6 @@
                 // This is syntax required from OBJLoader2 because argument is NOT Object3D it turns out
                 let object = loadObj.detail.loaderRootNode;
                 object.traverse(function (node) {
-                    console.log(node);
                     if (node.isMesh) node.material = material;
                 }
                 );
