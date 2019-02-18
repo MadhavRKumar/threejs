@@ -49,7 +49,7 @@
     void main() {
         float ndotl = dot(norm, normalize(lightDir));
         //ndotl = 1. + clamp(floor(ndotl), -1., 0.);
-        //ndotl = smoothstep(0., 0.5, ndotl);
+        ndotl = smoothstep(0., 0.025, ndotl);
 
         
 

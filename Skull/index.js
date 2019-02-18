@@ -17,8 +17,8 @@
         heartMaterial,
         isRecord = window.location.href.indexOf("?record") > -1;
         capturer = !isRecord || new CCapture({ format: 'gif', workersPath: "../three/" }),
-        pink = new THREE.Color(0xffe2e7),
-        darkGrey = new THREE.Color(0x010101),
+        pink = new THREE.Color(0xffd3da),
+        darkGrey = new THREE.Color(0x000000),
         palette = [darkGrey, pink];
 
 
